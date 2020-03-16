@@ -13,23 +13,23 @@ import { localPoint } from '@vx/event';
 import { utcFormat } from 'd3-time-format';
 
 var data = [
-    { date: new Date(2020, 9, 7), value: 475 },
+    { date: new Date(2020, 9, 7), value: 390 },
     { date: new Date(2020, 9, 8), value: 430 },
-    { date: new Date(2020, 9, 9), value: 740 },
+    { date: new Date(2020, 9, 9), value: 1020 },
     { date: new Date(2020, 9, 10), value: 420 },
     { date: new Date(2020, 9, 11), value: 410 },
     { date: new Date(2020, 9, 12), value: 390 },
-    { date: new Date(2020, 9, 13), value: 415 },
+    { date: new Date(2020, 9, 13), value: 550 },
   ];
 
-const width = 650;
-const height = 300;
+const width = 600;
+const height = 250;
 
 const margin = {
-  top: 60,
-  bottom: 60,
-  left: 80,
-  right: 80,
+  top: 0,
+  bottom: 30,
+  left: 25,
+  right: 25,
 };
 
 const bisectDate = bisector(d => d.date).left;
@@ -81,7 +81,7 @@ class LineChart extends Component {
     }
 
     renderTooltip(xScale, yScale, x, y) {
-        const { tooltipData, hideTooltip, tooltipTop, tooltipLeft } = this.props;
+        const { hideTooltip } = this.props;
 
         const onMove = (event) => {
             const point = localPoint(event);
@@ -145,7 +145,7 @@ class LineChart extends Component {
     }
 
     render() {
-        const { tooltipData, hideTooltip, tooltipTop, tooltipLeft } = this.props;
+        const { tooltipData } = this.props;
 
         // accessors
         const x = d => d.date;
@@ -222,9 +222,25 @@ class LineChart extends Component {
                         scale={yScale}
                         top={0}
                         left={0}
-                        stroke={'#1b1a1e'}
-                        tickTextFill={'#1b1a1e'}
-                        numTicks={2}
+                        numTicks={4}
+                        tickLabelProps={() => ({
+                            fill: 'gray',
+                            textAnchor: 'middle',
+                            fontSize: 10,
+                            fontFamily: 'Arial',
+                            dx: '2em',
+                            dy: '1.25em'
+                        })}
+                        tickComponent={({ formattedValue, ...tickProps }) => {
+                            return (
+                            <>
+                                <text {...tickProps} stroke="rgba(255, 255, 255, .5)" strokeWidth="3" fill="#fff">{formattedValue}</text>
+                                <text {...tickProps}>{formattedValue}</text>
+                            </>)
+                        }}
+                        tickFormat={(value, index) => {
+                            return index % 2 === 0 ? value : '';
+                        }}
                         hideAxisLine={true}
                         hideZero={true}
                         hideTicks={true}
@@ -237,6 +253,14 @@ class LineChart extends Component {
                         tickTextFill={'#1b1a1e'}
                         numTicks={7}
                         hideTicks={true}
+                        tickLabelProps={() => ({
+                            fill: 'gray',
+                            textAnchor: 'middle',
+                            fontSize: 10,
+                            fontFamily: 'Arial',
+                            dx: '0.25em',
+                            dy: '-0.35em'
+                        })}
                         tickFormat={value => {
                             return utcFormat('%b %d')(value);
                         }}
@@ -251,7 +275,7 @@ class LineChart extends Component {
             </svg>
             {tooltipData && (
                 <Tooltip
-                    top={yScale(y(tooltipData)) + margin.top}
+                    top={yScale(y(tooltipData)) + margin.top - 10}
                     left={xScale(x(tooltipData)) + margin.left + 10}
                     style={{
                         border: "1px solid lightgray",
