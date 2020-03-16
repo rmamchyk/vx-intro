@@ -6,19 +6,20 @@ import { LinePath, Circle, Area, Bar } from '@vx/shape';
 import { AxisLeft, AxisBottom } from '@vx/axis';
 import { extent, max, bisector } from 'd3-array';
 import { curveLinear } from '@vx/curve'
-import { withTooltip } from '@vx/tooltip';
+import { withTooltip, Tooltip } from '@vx/tooltip';
 import { Subject } from 'rxjs';
 import { throttleTime } from 'rxjs/operators';
 import { localPoint } from '@vx/event';
+import { utcFormat } from 'd3-time-format';
 
 var data = [
-    { date: new Date(2020, 10, 7), value: 475 },
-    { date: new Date(2020, 10, 8), value: 430 },
-    { date: new Date(2020, 10, 9), value: 740 },
-    { date: new Date(2020, 10, 10), value: 420 },
-    { date: new Date(2020, 10, 11), value: 410 },
-    { date: new Date(2020, 10, 12), value: 390 },
-    { date: new Date(2020, 10, 13), value: 415 },
+    { date: new Date(2020, 9, 7), value: 475 },
+    { date: new Date(2020, 9, 8), value: 430 },
+    { date: new Date(2020, 9, 9), value: 740 },
+    { date: new Date(2020, 9, 10), value: 420 },
+    { date: new Date(2020, 9, 11), value: 410 },
+    { date: new Date(2020, 9, 12), value: 390 },
+    { date: new Date(2020, 9, 13), value: 415 },
   ];
 
 const width = 650;
@@ -80,13 +81,10 @@ class LineChart extends Component {
     }
 
     renderTooltip(xScale, yScale, x, y) {
-        const { tooltipData, hideTooltip } = this.props;
-        
-        console.log(tooltipData)
+        const { tooltipData, hideTooltip, tooltipTop, tooltipLeft } = this.props;
 
         const onMove = (event) => {
             const point = localPoint(event);
-            console.log(point)
             this.tooltip$.next({ point, xScale, yScale, data });
         };
 
@@ -103,22 +101,52 @@ class LineChart extends Component {
                 onMouseMove={onMove}
                 onMouseLeave={() => hideTooltip()}
             />
-            {/* {tooltipData && (
-                <MultipointMarker
-                    xValue={tooltipData[dateField!]}
-                    yValues={yValues}
-                    xScale={xScale}
-                    yScale={yScale}
-                    yMax={yMax}
-                    width={width - margin.left - margin.right}
-                    dots={includeControl ? [0, 1] : [0]}
-                    formatter={formatPercentDiff}
-                />
-            )} */}
         </>;
+    }
+    
+    renderCircleHover(d, xScale, yScale, x, y) {
+        const cx = xScale(x(d));
+        const cy = yScale(y(d));
+
+        return (
+            <>
+                <Circle
+                    cx={cx}
+                    cy={cy}
+                    r={4.5}
+                    stroke={'rgb(0, 0, 0)'}
+                    strokeWidth={1}
+                    strokeOpacity={0.2}
+                    fillOpacity={1}
+                    fill={'none'}
+                />
+                <Circle
+                    cx={cx}
+                    cy={cy}
+                    r={5.5}
+                    stroke={'rgb(0, 0, 0)'}
+                    strokeWidth={1}
+                    strokeOpacity={0.1}
+                    fillOpacity={1}
+                    fill={'none'}
+                />
+                <Circle
+                    cx={cx}
+                    cy={cy}
+                    r={6.5}
+                    stroke={'rgb(0, 0, 0)'}
+                    strokeWidth={1}
+                    strokeOpacity={0.05}
+                    fillOpacity={1}
+                    fill={'none'}
+                />
+            </>
+        );
     }
 
     render() {
+        const { tooltipData, hideTooltip, tooltipTop, tooltipLeft } = this.props;
+
         // accessors
         const x = d => d.date;
         const y = d => d.value;
@@ -139,6 +167,12 @@ class LineChart extends Component {
         });
     
         return (
+        <div 
+            style={{ 
+                position: 'relative',
+                display: 'inline-flex'
+            }
+        }>
             <svg width={width} height={height}>    
                 <Group top={margin.top} left={margin.left}>
                     <Area
@@ -180,37 +214,6 @@ class LineChart extends Component {
                                     r={4}
                                     fill={'#058DC7'}
                                 />
-    
-                                <Circle
-                                    cx={cx}
-                                    cy={cy}
-                                    r={4.5}
-                                    stroke={'rgb(0, 0, 0)'}
-                                    strokeWidth={1}
-                                    strokeOpacity={0.2}
-                                    fillOpacity={1}
-                                    fill={'none'}
-                                />
-                                <Circle
-                                    cx={cx}
-                                    cy={cy}
-                                    r={5.5}
-                                    stroke={'rgb(0, 0, 0)'}
-                                    strokeWidth={1}
-                                    strokeOpacity={0.1}
-                                    fillOpacity={1}
-                                    fill={'none'}
-                                />
-                                <Circle
-                                    cx={cx}
-                                    cy={cy}
-                                    r={6.5}
-                                    stroke={'rgb(0, 0, 0)'}
-                                    strokeWidth={1}
-                                    strokeOpacity={0.05}
-                                    fillOpacity={1}
-                                    fill={'none'}
-                                />
                             </Fragment>
                         )
                     })}
@@ -221,7 +224,7 @@ class LineChart extends Component {
                         left={0}
                         stroke={'#1b1a1e'}
                         tickTextFill={'#1b1a1e'}
-                        numTicks={4}
+                        numTicks={2}
                         hideAxisLine={true}
                         hideZero={true}
                         hideTicks={true}
@@ -234,11 +237,36 @@ class LineChart extends Component {
                         tickTextFill={'#1b1a1e'}
                         numTicks={7}
                         hideTicks={true}
+                        tickFormat={value => {
+                            return utcFormat('%b %d')(value);
+                        }}
                     />
 
                     {this.renderTooltip(xScale, yScale, x, y)}
+
+                    {tooltipData && (
+                        this.renderCircleHover(tooltipData, xScale, yScale, x, y)
+                    )}
                 </Group>
             </svg>
+            {tooltipData && (
+                <Tooltip
+                    top={yScale(y(tooltipData)) + margin.top}
+                    left={xScale(x(tooltipData)) + margin.left + 10}
+                    style={{
+                        border: "1px solid lightgray",
+                        boxShadow: '2px 2px 4px rgba(0,0,0,.1)',
+                        transform: 'translateY(-100%)',
+                        fontSize: 11.5,
+                        textAlign: 'start',
+                        lineHeight: 1.2
+                    }}
+                    >
+                        <strong>{`${utcFormat('%A, %B %e')(x(tooltipData))}`}</strong><br/>
+                        Total Events: <strong>{`${y(tooltipData)}`}</strong>
+                </Tooltip>
+            )}
+        </div>
         );
     }
 }
