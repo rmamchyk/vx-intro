@@ -5,7 +5,6 @@ import { scaleTime, scaleLinear } from '@vx/scale';
 import { LinePath, Circle, Area, Bar } from '@vx/shape';
 import { AxisLeft, AxisBottom } from '@vx/axis';
 import { extent, max, bisector } from 'd3-array';
-import { genDateValue } from '@vx/mock-data';
 import { curveLinear } from '@vx/curve'
 import { withTooltip } from '@vx/tooltip';
 import { Subject } from 'rxjs';
@@ -32,7 +31,7 @@ const margin = {
   right: 80,
 };
 
-const bisectDate = bisector(d => d.date).right;
+const bisectDate = bisector(d => d.date).left;
 
 class LineChart extends Component {
     tooltip$ = new Subject();
@@ -57,13 +56,11 @@ class LineChart extends Component {
 
     handleTooltip({ data, point, xScale, yScale }) {
         const { showTooltip } = this.props;
-        const { x } = point;
+        const x = point.x - margin.left;
+
         const x0 = xScale.invert(x);
 
         const index = bisectDate(data, x0, 1);
-
-        // console.log('x0: ', x0)
-        // console.log('index: ', index)
 
         const d0 = data[index - 1];
         const d1 = data[index];
@@ -84,9 +81,12 @@ class LineChart extends Component {
 
     renderTooltip(xScale, yScale, x, y) {
         const { tooltipData, hideTooltip } = this.props;
+        
         console.log(tooltipData)
+
         const onMove = (event) => {
             const point = localPoint(event);
+            console.log(point)
             this.tooltip$.next({ point, xScale, yScale, data });
         };
 
@@ -97,7 +97,7 @@ class LineChart extends Component {
                 width={width - margin.right - margin.left}
                 height={height - margin.top - margin.bottom}
                 fill="transparent"
-                // data={data}
+                data={data}
                 onTouchStart={onMove}
                 onTouchMove={onMove}
                 onMouseMove={onMove}
@@ -132,6 +132,7 @@ class LineChart extends Component {
             domain: extent(data, x),
             range: [0, xMax]
         });
+
         const yScale = scaleLinear({
             domain: [0, max(data, y) * 1.5],
             range: [yMax, 0]
