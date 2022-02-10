@@ -19,7 +19,7 @@
     "@vx/tooltip": "0.0.195",
     "d3-array": "^2.4.0",
     "d3-time-format": "^2.2.3",
-    "node-sass": "^4.13.1",
+    "node-sass": "^7.0.0",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
     "react-scripts": "3.4.0",
